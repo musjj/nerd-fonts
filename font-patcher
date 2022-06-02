@@ -767,6 +767,11 @@ class font_patcher:
             0xf0de: {'align': 'c', 'valign': '', 'stretch': 'pa', 'params': {}}
         }
 
+        SYM_ATTR_BRAILLE = {
+            # 'pa' == preserve aspect ratio
+            'default': {'align': 'c', 'valign': 'c', 'stretch': 'pa', 'params': {'overlap': -0.05}}
+        }
+
         CUSTOM_ATTR = {
             # 'pa' == preserve aspect ratio
             'default': {'align': 'c', 'valign': '', 'stretch': '', 'params': {}}
@@ -835,7 +840,7 @@ class font_patcher:
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                                   'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0X26A1, 'SymEnd': 0X26A1, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Zap
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons.ttf",                                   'Exact': self.octiconsExactEncodingPosition,  'SymStart': 0xF27C, 'SymEnd': 0xF27C, 'SrcStart': 0xF4A9, 'SrcEnd': 0xF4A9, 'ScaleGlyph': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Desktop
             {'Enabled': self.args.codicons,             'Name': "Codicons",                'Filename': "codicons/codicon.ttf",                           'Exact': True,                                'SymStart': 0xEA60, 'SymEnd': 0xEBEB, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': None,             'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.braille,              'Name': "Braille",                 'Filename': "UBraille.ttf",                                   'Exact': True,                                'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': BRAILLE_SCALE_LIST,'Attributes': SYM_ATTR_DEFAULT},
+            {'Enabled': self.args.braille,              'Name': "Braille",                 'Filename': "UBraille.ttf",                                   'Exact': True,                                'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'SrcEnd': None,   'ScaleGlyph': BRAILLE_SCALE_LIST,'Attributes': SYM_ATTR_BRAILLE},
             {'Enabled': self.args.custom,               'Name': "Custom",                  'Filename': self.args.custom,                                 'Exact': True,                                'SymStart': 0x0000, 'SymEnd': 0x0000, 'SrcStart': 0x0000, 'SrcEnd': 0x0000, 'ScaleGlyph': None,             'Attributes': CUSTOM_ATTR}
         ]
 
@@ -1070,7 +1075,7 @@ class font_patcher:
             # Use the dimensions from the newly pasted and stretched glyph
             if overlap and overlap >= 0:
                 sym_dim = get_glyph_dimensions(self.sourceFont[currentSourceFontGlyph])
-            else
+            else:
                 sym_dim = get_glyph_dimensions(self.sourceFont[currentSourceFontGlyph], scaleGlyph, scale_ratio_x, scale_ratio_y)
             y_align_distance = 0
             if sym_attr['valign'] == 'c':
