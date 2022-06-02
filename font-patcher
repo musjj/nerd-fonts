@@ -936,6 +936,7 @@ class font_patcher:
         progressText = ''
         careful = False
         glyphSetLength = 0
+        self.prepareScaleGlyph(scaleGlyph, symbolFont)
 
         if self.args.careful:
             careful = True
@@ -1067,7 +1068,10 @@ class font_patcher:
                 self.sourceFont[currentSourceFontGlyph].transform(psMat.scale(scale_ratio_x, scale_ratio_y))
 
             # Use the dimensions from the newly pasted and stretched glyph
-            sym_dim = get_glyph_dimensions(self.sourceFont[currentSourceFontGlyph])
+            if overlap and overlap >= 0:
+                sym_dim = get_glyph_dimensions(self.sourceFont[currentSourceFontGlyph])
+            else
+                sym_dim = get_glyph_dimensions(self.sourceFont[currentSourceFontGlyph], scaleGlyph, scale_ratio_x, scale_ratio_y)
             y_align_distance = 0
             if sym_attr['valign'] == 'c':
                 # Center the symbol vertically by matching the center of the line height and center of symbol
@@ -1193,6 +1197,8 @@ class font_patcher:
         #   Note that this allows only one group for the whle symbol font, and that the scaling factor is defined by
         #   a specific character, which needs to be manually selected (on each symbol font update).
         #   Previous entries are automatically rewritten to the new style.
+        if not scaleGlyph:
+            return
         if 'scales' in scaleGlyph:
             # Already prepared... must not happen, ignore call
             return
@@ -1221,8 +1227,6 @@ class font_patcher:
 
     def get_glyph_scale(self, unicode_value, scaleGlyph, symbolFont):
         """ Determines whether or not to use scaled glyphs for glyphs in passed glyph_list """
-        if not 'scales' in scaleGlyph:
-            self.prepareScaleGlyph(scaleGlyph, symbolFont)
         for glyph_list, scale in zip(scaleGlyph['GlyphsToScale'], scaleGlyph['scales']):
             if unicode_value in glyph_list:
                 return scale
@@ -1268,8 +1272,27 @@ def get_multiglyph_boundingBox(glyphs):
         'height': bbox[3] + (-bbox[1]),
     }
 
-def get_glyph_dimensions(glyph):
-    """ Returns dict of the dimesions of the glyph passed to it. """
+def get_glyph_dimensions(glyph, scaleGlyph = None, scale_x = 1.0, scale_y = 1.0):
+    """ Returns dict of the dimensions of the glyph passed to it. """
+    if scaleGlyph:
+        # Return the combined bounding box on glyphs affected by scaleGlyph
+        # Take the scaling into account. Note that this scaling is not fully
+        # correct because the actual scaled glyph will have a slightly different
+        # (rounded) scale. Usually one should determine the bounding box after actual
+        # scaling, but we can not really scale the virtual combined bounding box.
+        for glyph_list, sym_dim in zip(scaleGlyph['GlyphsToScale'], scaleGlyph['bbdims']):
+            if not glyph.unicode in glyph_list:
+                continue
+            if not sym_dim:
+                continue
+            return {
+                'xmin'  : sym_dim['xmin'] * scale_x,
+                'ymin'  : sym_dim['ymin'] * scale_y,
+                'xmax'  : sym_dim['xmax'] * scale_x,
+                'ymax'  : sym_dim['ymax'] * scale_y,
+                'width' : sym_dim['width'] * scale_x,
+                'height': sym_dim['height'] * scale_y,
+            }
     return get_multiglyph_boundingBox([ glyph ])
 
 def update_progress(progress):
